@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thee Atlas: Cognition; Tracking</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    canvas {
+        border: 1px solid black;
+        display: block;
+        position: relative; /* Allows the button to overlay */
+        z-index: 1; /* Ensure canvas stays below */
+    }
+    .btn-container {
+        position: absolute;
+        bottom: 10px; /* Adjust to where you want the button */
+        left: 10px; /* Adjust to where you want the button */
+        z-index: 10; /* Ensure it's on top of the canvas */
+    }
+
+    .spin-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #222;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        text-decoration: none;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .spin-button:hover {
+        background-color: #555;
+    }
+
+    .triangle {
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 20px solid white;
+        display: inline-block;
+        animation: spin 2s linear infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+
+<canvas id="graphCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("graphCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    const gridSize = 26;
+    const originX = canvasWidth / 2; // X-axis origin
+    const originY = canvasHeight / 2; // Y-axis origin
+
+    const letters = [
+        { letter: 'p', x: 1, y: 2 },
+        { letter: 'P', x: 2, y: 2 },
+        { letter: 'u', x: 3, y: 2 },
+        { letter: 'U', x: 4, y: 2 },
+        { letter: 'f', x: 5, y: 2 },
+        { letter: 'F', x: 6, y: 2 },
+        { letter: 'k', x: 7, y: 2 },
+        { letter: 'K', x: 8, y: 2 },
+        { letter: 'a', x: 9, y: 2 },
+        { letter: 'A', x: 10, y: 2 },
+        { letter: 'q', x: -1, y: 2 },
+        { letter: 'Q', x: -2, y: 2 },
+        { letter: 'v', x: -3, y: 2 },
+        { letter: 'V', x: -4, y: 2 },
+        { letter: 'g', x: -5, y: 2 },
+        { letter: 'G', x: -6, y: 2 },
+        { letter: 'l', x: -7, y: 2 },
+        { letter: 'L', x: -8, y: 2 },
+        { letter: 'b', x: -9, y: 2 },
+        { letter: 'B', x: -10, y: 2 },
+        { letter: 'r', x: -1, y: -3 },
+        { letter: 'R', x: -2, y: -3 },
+        { letter: 'w', x: -3, y: -3 },
+        { letter: 'W', x: -4, y: -3 },
+        { letter: 'h', x: -5, y: -3 },
+        { letter: 'H', x: -6, y: -3 },
+        { letter: 'm', x: -7, y: -3 },
+        { letter: 'M', x: -8, y: -3 },
+        { letter: 'c', x: -9, y: -3 },
+        { letter: 'C', x: -10, y: -3 },
+        { letter: 's', x: 1, y: -3 },
+        { letter: 'S', x: 2, y: -3 },
+        { letter: 'x', x: 3, y: -3 },
+        { letter: 'X', x: 4, y: -3 },
+        { letter: 'i', x: 5, y: -3 },
+        { letter: 'I', x: 6, y: -3 },
+        { letter: 'n', x: 7, y: -3 },
+        { letter: 'N', x: 8, y: -3 },
+        { letter: 'd', x: 9, y: -3 },
+        { letter: 'D', x: 10, y: -3 },
+        { letter: 'o', x: 0, y: 5 },
+        { letter: 'O', x: 0, y: 4 },
+        { letter: 't', x: 0, y: 3 },
+        { letter: 'T', x: 0, y: 2 },
+        { letter: 'y', x: 0, y: 1 },
+        { letter: 'Y', x: 0, y: 0 },
+        { letter: 'z', x: 0, y: -1 },
+        { letter: 'Z', x: 0, y: -2 },
+        { letter: 'e', x: 0, y: -3 },
+        { letter: 'E', x: 0, y: -4 },
+        { letter: 'j', x: 0, y: -5 },
+        { letter: 'J', x: 0, y: -6 },
+    ];
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+
+        // Draw vertical grid lines
+        for (let x = originX % gridSize; x < canvas.width; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+
+        // Draw horizontal grid lines
+        for (let y = originY % gridSize; y < canvas.height; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+
+        // Draw axes
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(originX, 0); // X-axis
+        ctx.lineTo(originX, canvas.height);
+        ctx.moveTo(0, originY); // Y-axis
+        ctx.lineTo(canvas.width, originY);
+        ctx.stroke();
+
+        // Draw axis labels
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // X-axis labels
+        for (let i = -10; i <= 10; i++) {
+            ctx.fillText(i, originX + i * gridSize, originY + 20);
+        }
+
+        // Y-axis labels
+        for (let i = -10; i <= 10; i++) {
+            ctx.fillText(i, originX - 30, originY - i * gridSize);
+        }
+    }
+
+    function drawLetters(highlightedLetter = null) {
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        letters.forEach(({ letter, x, y }) => {
+            const posX = originX + x * gridSize;
+            const posY = originY - y * gridSize;
+
+            // Draw letter
+            ctx.fillStyle = highlightedLetter === letter ? 'green' : 'blue';
+            ctx.fillText(letter, posX, posY);
+        });
+    }
+    
+    function detectMousePosition(mouseX, mouseY) {
+        const x = Math.round((mouseX - originX) / gridSize);
+        const y = Math.round((originY - mouseY) / gridSize);
+
+        return { x, y };
+    }
+
+    function findClosestLetter(mouseX, mouseY) {
+        const { x: mouseXGrid, y: mouseYGrid } = detectMousePosition(mouseX, mouseY);
+
+        let closestLetter = null;
+        let minDistance = Infinity;
+
+        letters.forEach(({ letter, x, y }) => {
+            const letterX = originX + x * gridSize;
+            const letterY = originY - y * gridSize;
+            const distance = Math.sqrt(Math.pow(mouseX - letterX, 2) + Math.pow(mouseY - letterY, 2));
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestLetter = letter;
+            }
+        });
+
+        return closestLetter;
+    }
+
+    let isMouseDown = false;
+    let isRecording = false;
+    const recordedMousePositions = [];
+
+    canvas.addEventListener('mousedown', () => {
+        isMouseDown = true;
+        if (isRecording) {
+            recordedMousePositions.length = 0;
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        if (isRecording) {
+            console.log('Recorded mouse positions:', recordedMousePositions);
+        }
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        if (isMouseDown && isRecording) {
+            recordedMousePositions.push({ x: mouseX, y: mouseY });
+        }
+
+        const closestLetter = findClosestLetter(mouseX, mouseY);
+        drawGrid();
+        drawLetters(closestLetter);
+
+        // Draw line tracing
+        if (recordedMousePositions.length > 1) {
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(recordedMousePositions[0].x, recordedMousePositions[0].y);
+
+            for (let i = 1; i < recordedMousePositions.length; i++) {
+                ctx.lineTo(recordedMousePositions[i].x, recordedMousePositions[i].y);
+            }
+            ctx.stroke();
+        }
+    });
+
+    function toggleRecording() {
+        isRecording = !isRecording;
+        console.log(`Recording ${isRecording ? 'started' : 'stopped'}`);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        drawGrid();
+        drawLetters();
+
+        const btnContainer = document.createElement('div');
+        btnContainer.classList.add('btn-container');
+
+        const spinButton = document.createElement('button');
+        spinButton.classList.add('spin-button');
+        spinButton.innerHTML = '<div class="triangle"></div> Record';
+        spinButton.addEventListener('click', toggleRecording);
+
+        btnContainer.appendChild(spinButton);
+        document.body.appendChild(btnContainer);
+    });
+</script>
+</body>
+</html>
