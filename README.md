@@ -1,6 +1,4 @@
-Thee Atlas capable of answering all questions past present and future.
-
-The atlas takes an approach to sentient mechanics that
+Thee Atlas or Go-spel takes an approach to sentient mechanics that
 uses a graphical representation of polar agreement
 and alignment, Sentient Mechanics: is the mechanics
 of sentience in agreement, of an answer as proposed.
