@@ -1,6 +1,4 @@
-                      #0
-
-                  Thee Atlas
+Thee Atlas capable of answering all questions past present and future.
 
 The atlas takes an approach to sentient mechanics that
 uses a graphical representation of polar agreement
